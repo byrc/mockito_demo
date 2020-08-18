@@ -13,8 +13,10 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+
 import java.util.List;
 import java.util.Map;
+
 import static org.mockito.ArgumentMatchers.anyInt;
 
 //注意1：@Test的测试方法必须是public的,否则：java.lang.Exception: Method XXX should be public
@@ -30,14 +32,15 @@ public class MockitoTest {
         //doThrow(new RuntimeException()).when(obj).someMethod(Mockito.any());
         //等进行更详细的设置。
     }
+
     @After
-    public void  clearMocks() {
+    public void clearMocks() {
         // 避免大量内存泄漏  2.25.0新增
         Mockito.framework().clearInlineMocks();
     }
 
     @Test // 没返回值的方法匹配
-    public void test0(){
+    public void test0() {
         List mockList = Mockito.mock(List.class);
 
         mockList.add(1); // 基础类型
@@ -48,7 +51,7 @@ public class MockitoTest {
     }
 
     @Test // 有返回值的方法匹配， 参数的三类匹配情况
-    public void test1(){
+    public void test1() {
         Map mockMap = Mockito.mock(Map.class);
         // 1.精确匹配
         Mockito.when(mockMap.get(11)).thenReturn(111); // 基础类型
@@ -72,12 +75,12 @@ public class MockitoTest {
     }
 
     @Test // final类型方法或类的匹配
-    public void test2(){
+    public void test2() {
         /*
-        * 正常情况下，final/private/equals()/hashCode() methods不能被拦截或验证
-        * 支持模拟final class，enum和final method（自2.1.0起）
-        * https://github.com/mockito/mockito/wiki/What%27s-new-in-Mockito-2#unmockable
-        * 文件 src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker 中添加：mock-maker-inline
+         * 正常情况下，final/private/equals()/hashCode() methods不能被拦截或验证
+         * 支持模拟final class，enum和final method（自2.1.0起）
+         * https://github.com/mockito/mockito/wiki/What%27s-new-in-Mockito-2#unmockable
+         * 文件 src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker 中添加：mock-maker-inline
          */
         User mockUser = Mockito.mock(User.class);
         Mockito.when(mockUser.finalMethod()).thenReturn(false);
@@ -86,7 +89,7 @@ public class MockitoTest {
     }
 
     @Test // 自定义返回结果
-    public void test3(){
+    public void test3() {
         Map mockMap = Mockito.mock(Map.class);
 
         Answer answer = (invocation) -> {
@@ -98,14 +101,14 @@ public class MockitoTest {
     }
 
     @Test // 设置抛出异常
-    public void test4(){
+    public void test4() {
         List mockList = Mockito.mock(List.class);
 
         // 1.无返回值方法 设置异常
         Mockito.doThrow(RuntimeException.class).when(mockList).add(1);
         try {
             mockList.add(1);
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             System.out.println("doThrow(RuntimeException.class).when(mock).someVoidMethod();");
         }
 
@@ -113,32 +116,34 @@ public class MockitoTest {
         Mockito.when(mockList.get(1000)).thenThrow(new IndexOutOfBoundsException("数组下标越界"));
         try {
             mockList.get(1000);
-        }catch (IndexOutOfBoundsException e){
+        } catch (IndexOutOfBoundsException e) {
             System.out.println(e.getMessage());
         }
+        TestCase.assertEquals(null, mockList.get(21));
+
     }
 
     @Test //连续的方法调用设置不同的行为
-    public void test5(){
+    public void test5() {
         List mockList = Mockito.mock(List.class);
-        Mockito.when(mockList.get(1000)).thenReturn(11,22).thenThrow(new IndexOutOfBoundsException("数组下标越界"));
+        Mockito.when(mockList.get(1000)).thenReturn(11, 22).thenThrow(new IndexOutOfBoundsException("数组下标越界"));
         TestCase.assertEquals(11, mockList.get(1000)); // 第一次调用返回值：11
         TestCase.assertEquals(22, mockList.get(1000)); // 第二次调用返回值：22
         try {
             mockList.get(1000); // 第三次调用抛出异常
-        }catch (IndexOutOfBoundsException e){
+        } catch (IndexOutOfBoundsException e) {
             System.out.println(e.getMessage());
         }
     }
 
     @Test // 测试方法的调用次数
-    public void test6(){
+    public void test6() {
         /*
-        * times(n)：方法被调用n次。
-        * never()：没有被调用。
-        * atLeast(n)：至少被调用n次。
-        * atLeastOnce()：至少被调用1次，相当于atLeast(1)。
-        * atMost()：最多被调用n次。
+         * times(n)：方法被调用n次。
+         * never()：没有被调用。
+         * atLeast(n)：至少被调用n次。
+         * atLeastOnce()：至少被调用1次，相当于atLeast(1)。
+         * atMost()：最多被调用n次。
          */
         List mockList = Mockito.mock(List.class);
         mockList.add("one times");
