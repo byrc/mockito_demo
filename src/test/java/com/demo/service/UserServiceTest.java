@@ -10,15 +10,19 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+
 import java.util.Optional;
 import java.util.function.Function;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(User.class) //Static.class 是包含 static methods的类
+@PrepareForTest({User.class, UserServiceImpl.class}) //Static.class 是包含 static methods的类
 public class UserServiceTest {
     @InjectMocks
     private UserServiceImpl userServiceImpl;
@@ -28,17 +32,19 @@ public class UserServiceTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        // 模拟静态类（使用PowerMockito.spy（class）模拟特定方法）
-		PowerMockito.mockStatic(User.class);
+        // 可使用PowerMockito.spy（class）模拟特定方法: 包括私有方法和静态方法
+        // mock User 类的静态方法
+        PowerMockito.mockStatic(User.class);
     }
+
     @After
-    public void  clearMocks() {
+    public void clearMocks() {
         // 避免大量内存泄漏  2.25.0新增
         Mockito.framework().clearInlineMocks();
     }
 
     @Test // Mockito测试，实现类逻辑的测试是重点之一
-    public void test10(){
+    public void test10() {
         long id = 9527;
         User user = new User();
         user.setId(id);
@@ -48,8 +54,8 @@ public class UserServiceTest {
         TestCase.assertEquals(user, userServiceImpl.findById(id));
     }
 
-    @Test // 静态方法匹配
-    public void test11(){
+    @Test // mock静态方法1 （使用PowerMockito.mockStatic(class) mock静态方法）
+    public void test11() {
         User user = new User();
         user.setName("白玉京");
         UserDTO dto = new UserDTO();
@@ -61,7 +67,7 @@ public class UserServiceTest {
     }
 
     @Test // 函数类型参数匹配。 精确匹配我没找到该怎么匹配
-    public void test12(){
+    public void test12() {
         User user = new User();
         user.setId(9527L);
 
@@ -70,7 +76,7 @@ public class UserServiceTest {
     }
 
     @Test // 函数类型参数匹配。 类型匹配
-    public void test13(){
+    public void test13() {
         User user = new User();
         user.setId(9527L);
 
@@ -80,7 +86,7 @@ public class UserServiceTest {
     }
 
     @Test // 引用类型参数，未重写equals方法, 解决方法
-    public void test14(){
+    public void test14() {
         long pageNo = 1;
         long pageSize = 20;
         String name = "白玉京";
@@ -96,6 +102,22 @@ public class UserServiceTest {
 //        Mockito.when(jdbcQueryManager.queryForPageList(Mockito.eq(user), Mockito.eq(User.class), Mockito.argThat(argPage)))
 //                .thenReturn(Lists.newArrayList(user));
         TestCase.assertEquals(Lists.newArrayList(user), userServiceImpl.findByName(pageNo, pageSize, name));
+    }
+
+    @Test // mock私有方法（使用PowerMockito.spy（object）mock私有方法）
+    public void test15() throws Exception {
+        String str = "白玉京";
+        UserServiceImpl spyObj = PowerMockito.spy(userServiceImpl);
+        PowerMockito.when(spyObj, "privateMethod", str).thenReturn("35174");
+        TestCase.assertEquals("35174", spyObj.testPrivateMethod(str));
+    }
+
+    @Test // mock静态方法2（使用PowerMockito.spy（class）mock静态方法）
+    public void test17() throws Exception {
+        String str = "白玉京";
+        PowerMockito.spy(UserServiceImpl.class);
+        PowerMockito.when(userServiceImpl, "staticMethod", str).thenReturn("35174");
+        TestCase.assertEquals("35174", userServiceImpl.testStaticMethodMethod(str));
     }
 
 }
