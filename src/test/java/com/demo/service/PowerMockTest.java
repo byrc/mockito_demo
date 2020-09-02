@@ -10,20 +10,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.Function;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({User.class, UserServiceImpl.class}) //Static.class 是包含 static methods的类
-public class UserServiceTest {
+public class PowerMockTest {
     @InjectMocks
     private UserServiceImpl userServiceImpl;
     @Mock
@@ -94,13 +92,13 @@ public class UserServiceTest {
         user.setName(name);
         PageParam pageParam = PageParam.create(pageNo, pageSize);
         // PageParam未重写equals方法,参数匹配通不过
-        Mockito.when(jdbcQueryManager.queryForPageList(user, User.class, pageParam)).thenReturn(Lists.newArrayList(user));
+//        Mockito.when(jdbcQueryManager.queryForPageList(user, User.class, pageParam)).thenReturn(Lists.newArrayList(user));
 
         // 解决方法: 1.重写equals方法；2.模糊匹配； 3.自定义匹配。
-//        ArgumentMatcher<PageParam> argPage = (page) ->
-//                page.getPageNo() == pageParam.getPageNo() && page.getPageSize() == pageParam.getPageSize();
-//        Mockito.when(jdbcQueryManager.queryForPageList(Mockito.eq(user), Mockito.eq(User.class), Mockito.argThat(argPage)))
-//                .thenReturn(Lists.newArrayList(user));
+        ArgumentMatcher<PageParam> argPage = (page) ->
+                page.getPageNo() == pageParam.getPageNo() && page.getPageSize() == pageParam.getPageSize();
+        Mockito.when(jdbcQueryManager.queryForPageList(Mockito.eq(user), Mockito.eq(User.class), Mockito.argThat(argPage)))
+                .thenReturn(Lists.newArrayList(user));
         TestCase.assertEquals(Lists.newArrayList(user), userServiceImpl.findByName(pageNo, pageSize, name));
     }
 
@@ -110,6 +108,14 @@ public class UserServiceTest {
         UserServiceImpl spyObj = PowerMockito.spy(userServiceImpl);
         PowerMockito.when(spyObj, "privateMethod", str).thenReturn("35174");
         TestCase.assertEquals("35174", spyObj.testPrivateMethod(str));
+    }
+
+    @Test // 调用私有方法（使用PowerMockito.method（...）通过反射调用私有方法）
+    public void test16() throws Exception {
+        String str = "白玉京";
+        String result = "I am private method. " + str;
+        Method method = PowerMockito.method(UserServiceImpl.class, "privateMethod", String.class);
+        TestCase.assertEquals(result, method.invoke(userServiceImpl, str));
     }
 
     @Test // mock静态方法2（使用PowerMockito.spy（class）mock静态方法）
